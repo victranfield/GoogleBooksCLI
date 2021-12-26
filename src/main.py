@@ -45,7 +45,6 @@ def delete(index):
     else:
         print('Reading List Size Is lower Than give Index')
 
-
 # simply saving book details in a list of dictionary to use in future process
 def save(data):
     book_list = []
@@ -63,3 +62,60 @@ def save(data):
         book_list.append(book)
     display(book_list)
     return book_list
+
+
+def main():
+    while (1):
+        print(
+            'Do You Want To Search For the Book: Enter "Search" "View" "Delete" "Exit" '
+        )
+        flag = input(
+        )  # user input options     "Search" "View" "Delete" "Exit"
+        if flag.lower() == "exit":
+            break
+        if flag.lower() not in [
+                "search", "view", "delete", "exit"
+        ]:  # checking if user has inputted the correct option
+            print('Invalid Command')
+            continue
+        else:
+            pass
+
+        if flag.lower() == 'search':
+            ph = input(
+                'Enter the Keyword to Search You Will get Title,publisher,author'
+            )
+            get = get_data(
+                ph)  # calling get_data funct to get book list from google api
+            my = save(
+                get
+            )  # calling save funct to save books that has be retrived by api
+            print('Do you want to add Book in Reading List Enter : yes or no')
+            ''' while loop to ask user if he/she 
+                wants to add more books in reading list.
+            '''
+            while 1:
+                y_n = input()
+                if y_n.lower() == 'yes':
+                    book_no = int(input('Enter Book No'))
+                    if book_no > 5:
+                        print('Your are Exceeding the Book Fetched')
+                        print('Do You want to Add more Book')
+                        continue
+                    save_fav(my, book_no)
+                    print('Do You want to Add more Book')
+                elif y_n.lower() == 'no':
+                    break
+                else:
+                    print('Invalid Input')
+
+        # this is to check if user has input view i.e to he want to see his reading list
+        if flag.lower() == 'view':
+            display(myList)  # calling display to print mylist
+        if flag.lower() == 'delete':
+            print(f'No of books in Reading List is {len(myList)}')
+            if len(myList) > 0:
+                index = int(input("Enter the Index of Book to delete"))
+                delete(
+                    index
+                )  # calling delete function to delete books from reading list by giving parameter i.e index
