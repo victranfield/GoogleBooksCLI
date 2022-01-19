@@ -2,17 +2,17 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 from io import StringIO
+from src.main import display, save_fav, delete, save, main
 
-from src.main import display, save_fav, delete, main, save
-
-book_list = []
-myList = []
+# patch dectorator for simulating stdout
 mock_stdout = patch('sys.stdout', new_callable=StringIO)
+
 
 class TestDisplay(unittest.TestCase):
     @mock_stdout
     def test_empty(self, stdout):
         '''Test displaying an empty reading list.'''
+        # call display with an empty list and check if output is 'Reading List Empty'
         display([])
         output = stdout.getvalue().strip()
         self.assertEqual(output, 'Reading List Empty')
@@ -21,6 +21,7 @@ class TestDisplay(unittest.TestCase):
     def test_1_book(self, stdout):
         '''Test displaying a list with only one book.'''
         books = [{'title': 'Hello', 'publisher': 'John', 'author': 'Jane'}]
+        # call display with a list with one book and check if output is only that book.
         display(books)
         output = stdout.getvalue().strip()
         self.assertEqual(
@@ -39,6 +40,7 @@ class TestDisplay(unittest.TestCase):
             'publisher': 'J K Rowling',
             'author': 'J K Rowling'
         }]
+        # call display with a list with multiple books and check if they're shown
         display(books)
         output = stdout.getvalue().strip()
         self.assertEqual(
@@ -51,36 +53,87 @@ class TestSaveFav(unittest.TestCase):
     @mock_stdout
     def test_add_book(self, stdout):
         '''Test adding a single book.'''
-        global myList
-        oldMyList = myList[:]
-        myList = []
         save_fav([{
             'title': 'Harry Potter',
             'publisher': 'J K Rowling',
             'author': 'J K Rowling'
-        }], 1)
+        }], 1, [])
 
         output = stdout.getvalue().strip()
         self.assertEqual(
             output,
             '***\nBook 1:\nTitle: Harry Potter\npublisher: J K Rowling\nauthor: J K Rowling'
         )
-        myList = oldMyList[:]
+
+    @mock_stdout
+    def test_add_duplicate_book(self, stdout):
+        '''Test adding a book that\'s already added.'''
+        myList = []
+        save_fav([{
+            'title': 'Harry Potter',
+            'publisher': 'J K Rowling',
+            'author': 'J K Rowling'
+        }], 1, myList)
+        save_fav([{
+            'title': 'Harry Potter',
+            'publisher': 'J K Rowling',
+            'author': 'J K Rowling'
+        }], 1, myList)
+
+        output = stdout.getvalue().strip()
+        self.assertEqual(
+            output,
+            '***\nBook 1:\nTitle: Harry Potter\npublisher: J K Rowling\nauthor: J K Rowling\n\nBook Already Present'
+        )
 
 
 class TestDelete(unittest.TestCase):
     @mock_stdout
     def test_delete_empty(self, stdout):
         '''Test deleting a book from an empty list.'''
-        global myList
-        oldMyList = myList[:]
         myList = []
 
-        delete(1)
+        delete(1, myList)
         output = stdout.getvalue().strip()
         self.assertEqual(output, 'Reading List Size Is lower Than give Index')
 
-        myList = oldMyList[:]
+    @mock_stdout
+    def test_delete_one(self, stdout):
+        '''Test deleting one book.'''
+        myList = [{
+            'title': 'Harry Potter',
+            'publisher': 'J K Rowling',
+            'author': 'J K Rowling'
+        }]
+
+        delete(1, myList)
+        output = stdout.getvalue().strip()
+        self.assertEqual(output, 'Book is Deleted')
+
+    @mock_stdout
+    def test_delete_multiple(self, stdout):
+        '''Test deleting multiple books.'''
+        myList = [{
+            'title': 'Harry Potter',
+            'publisher': 'J K Rowling',
+            'author': 'J K Rowling'
+        }, {
+            'title': 'A Song of Ice and Fire',
+            'publisher': 'N/A',
+            'author': 'GRRM'
+        }, {
+            'title': 'The Lord of the Rings',
+            'publisher': 'JRR Tolkien',
+            'author': 'JRR Tolkien'
+        }]
+
+        delete(1, myList)
+        delete(1, myList)
+        delete(1, myList)
+        output = stdout.getvalue().strip()
+        self.assertEqual(output,
+                         'Book is Deleted\nBook is Deleted\nBook is Deleted')
+
 
 class TestSave(unittest.TestCase):
     @mock_stdout
@@ -161,7 +214,7 @@ class TestMain(unittest.TestCase):
         '''Test exiting the program without doing anything.'''
         stdin = mock.builtins.input
         mock.builtins.input = lambda: 'exit'
-        main()
+        main([])
         output = stdout.getvalue().strip()
 
         self.assertEqual(
@@ -179,7 +232,7 @@ class TestMain(unittest.TestCase):
 
         mock.builtins.input = lambda _=None: inputs.pop(0)
 
-        main()
+        main([])
         output = stdout.getvalue().strip()
 
         for value in [
@@ -193,4 +246,4 @@ class TestMain(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=9)
